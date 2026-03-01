@@ -8,7 +8,7 @@ from sqlalchemy import select, update, delete, func
 from sqlalchemy.orm import joinedload
 
 from app.db.database import get_db
-from app.db.models import LibraryModel, PatentModel, TaskModel, SimilarityResultModel
+from app.db.models import LibraryModel, PatentModel, TaskModel, SimilarityResultModel, TargetPatentModel
 from app.core.logging import get_logger
 
 logger = get_logger(__name__)
@@ -95,6 +95,26 @@ class LibraryService:
             )
             await session.commit()
             return count
+    
+    @staticmethod
+    async def update_storage_size(library_id: str) -> float:
+        """更新存储空间大小（MB）"""
+        async with get_db() as session:
+            # Sum file sizes in bytes and convert to MB
+            size_result = await session.execute(
+                select(func.coalesce(func.sum(PatentModel.file_size), 0))
+                .where(PatentModel.library_id == library_id)
+            )
+            total_bytes = size_result.scalar()
+            total_mb = total_bytes / (1024 * 1024)
+            
+            await session.execute(
+                update(LibraryModel)
+                .where(LibraryModel.id == library_id)
+                .values(size_mb=total_mb, updated_at=datetime.utcnow())
+            )
+            await session.commit()
+            return total_mb
 
 
 class PatentService:
@@ -114,6 +134,7 @@ class PatentService:
         description: str = None,
         file_path: str = None,
         file_name: str = None,
+        file_size: int = 0,
         embedding: list = None,
         embedding_dimensions: int = 0,
         quality_score: int = None
@@ -130,6 +151,14 @@ class PatentService:
             if claims:
                 claims_list = [c.strip() for c in claims.split("\n\n") if c.strip()]
             
+            # Get file size from file_path if not provided
+            if file_size == 0 and file_path:
+                try:
+                    from pathlib import Path
+                    file_size = Path(file_path).stat().st_size
+                except:
+                    pass
+            
             patent = PatentModel(
                 id=str(uuid.uuid4()),
                 library_id=library_id,
@@ -144,6 +173,7 @@ class PatentService:
                 description=description,
                 file_path=file_path,
                 file_name=file_name,
+                file_size=file_size,
                 embedding=embedding,
                 embedding_dimensions=embedding_dimensions,
                 extraction_quality=quality_score or 0
@@ -152,8 +182,9 @@ class PatentService:
             await session.commit()
             await session.refresh(patent)
             
-            # 更新专利库数量
+            # 更新专利库数量和存储空间
             await LibraryService.update_patent_count(library_id)
+            await LibraryService.update_storage_size(library_id)
             
             logger.info(f"Patent created: {patent.id} - {title[:50]}...")
             return patent
@@ -209,9 +240,10 @@ class PatentService:
             )
             await session.commit()
             
-            # 更新专利库数量
+            # 更新专利库数量和存储空间
             if result.rowcount > 0:
                 await LibraryService.update_patent_count(library_id)
+                await LibraryService.update_storage_size(library_id)
             
             return result.rowcount > 0
     
@@ -405,3 +437,118 @@ class ResultService:
                 .limit(limit)
             )
             return result.scalars().all()
+            result = await session.execute(
+                select(SimilarityResultModel).where(SimilarityResultModel.id == result_id)
+            )
+            return result.scalar_one_or_none()
+    
+    @staticmethod
+    async def list_results_by_task(task_id: str, limit: int = 100) -> List[SimilarityResultModel]:
+        """通过任务ID获取结果列表"""
+        async with get_db() as session:
+            result = await session.execute(
+                select(SimilarityResultModel)
+                .where(SimilarityResultModel.task_id == task_id)
+                .order_by(SimilarityResultModel.similarity_score.desc())
+                .limit(limit)
+            )
+            return result.scalars().all()
+
+
+class TargetPatentService:
+    """目标专利服务（不属于任何专利库的任务目标专利）"""
+    
+    @staticmethod
+    async def create_target_patent(
+        task_id: str,
+        title: str,
+        application_no: str = None,
+        publication_no: str = None,
+        ipc: str = None,
+        applicant: str = None,
+        inventors: list = None,
+        abstract: str = None,
+        claims: list = None,
+        description: str = None,
+        file_path: str = None,
+        file_name: str = None,
+        file_size: int = 0,
+        embedding: list = None,
+        embedding_dimensions: int = 0,
+        extraction_quality: int = 0
+    ) -> TargetPatentModel:
+        """为目标专利创建记录"""
+        async with get_db() as session:
+            # 检查是否已存在
+            existing = await session.execute(
+                select(TargetPatentModel).where(TargetPatentModel.task_id == task_id)
+            )
+            if existing.scalar_one_or_none():
+                # 删除旧的
+                await session.execute(
+                    delete(TargetPatentModel).where(TargetPatentModel.task_id == task_id)
+                )
+            
+            patent = TargetPatentModel(
+                id=str(uuid.uuid4()),
+                task_id=task_id,
+                title=title,
+                application_no=application_no,
+                publication_no=publication_no,
+                ipc=ipc,
+                applicant=applicant,
+                inventors=inventors or [],
+                abstract=abstract,
+                claims=claims or [],
+                description=description,
+                file_path=file_path,
+                file_name=file_name,
+                file_size=file_size,
+                embedding=embedding,
+                embedding_dimensions=embedding_dimensions,
+                extraction_quality=extraction_quality
+            )
+            session.add(patent)
+            await session.commit()
+            await session.refresh(patent)
+            logger.info(f"Target patent created for task: {task_id}")
+            return patent
+    
+    @staticmethod
+    async def get_target_patent_by_task(task_id: str) -> Optional[TargetPatentModel]:
+        """通过任务ID获取目标专利"""
+        async with get_db() as session:
+            result = await session.execute(
+                select(TargetPatentModel).where(TargetPatentModel.task_id == task_id)
+            )
+            return result.scalar_one_or_none()
+    
+    @staticmethod
+    async def delete_target_patent(task_id: str) -> bool:
+        """删除目标专利"""
+        async with get_db() as session:
+            result = await session.execute(
+                delete(TargetPatentModel).where(TargetPatentModel.task_id == task_id)
+            )
+            await session.commit()
+            return result.rowcount > 0
+    
+    @staticmethod
+    async def update_embedding(
+        task_id: str,
+        embedding: list,
+        dimensions: int
+    ) -> bool:
+        """更新目标专利的嵌入向量"""
+        async with get_db() as session:
+            await session.execute(
+                update(TargetPatentModel)
+                .where(TargetPatentModel.task_id == task_id)
+                .values(
+                    embedding=embedding,
+                    embedding_dimensions=dimensions,
+                    updated_at=datetime.utcnow()
+                )
+            )
+            await session.commit()
+            return True

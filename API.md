@@ -83,7 +83,18 @@ GET /tasks/{task_id}
   "status": "completed",
   "progress": 100,
   "library_id": "lib_id",
-  "target_patent": { ... },
+  "target_patent": {
+    "title": "专利标题",
+    "application_no": "申请号",
+    "publication_no": "公开号",
+    "ipc": "IPC分类",
+    "applicant": "申请人",
+    "inventors": ["发明人1"],
+    "abstract": "摘要",
+    "claims": ["权利要求1"],
+    "description": "说明书",
+    "extraction_quality": 95
+  },
   "stages": [...],
   "result": { ... },
   "created_at": "2024-03-01T08:00:00",
@@ -91,14 +102,37 @@ GET /tasks/{task_id}
 }
 ```
 
-### 提交任务
+**说明:**
+- `target_patent` 从数据库加载，支持后端重启后查看
+- 目标专利信息持久化存储，不随内存缓存丢失
+
+### 提交任务（支持目标专利持久化）
 
 ```http
-POST /tasks/{task_id}/submit?target_patent_id={patent_id}
+POST /tasks/{task_id}/submit
 ```
 
-**Query Parameters:**
-- `target_patent_id` (可选): 目标专利ID
+**Request Body:**
+```json
+{
+  "target_patent_info": {
+    "title": "专利标题",
+    "application_no": "申请号",
+    "publication_no": "公开号",
+    "ipc": "IPC分类",
+    "applicant": "申请人",
+    "inventors": ["发明人1", "发明人2"],
+    "abstract": "摘要",
+    "claims": ["权利要求1", "权利要求2"],
+    "description": "说明书",
+    "extraction_quality": 95
+  }
+}
+```
+
+**说明:**
+- 提供 `target_patent_info`：将目标专利持久化到数据库，任务保持 draft 状态
+- 不提供 `target_patent_info`：启动分析任务，状态变为 queued/running
 
 **Response:** 任务对象
 

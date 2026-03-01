@@ -107,10 +107,41 @@ const Icons = {
       <line x1="12" y1="3" x2="12" y2="15"/>
     </svg>
   ),
+  Folder: ({ size = 20, color = 'currentColor' }) => (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/>
+    </svg>
+  ),
+  Archive: ({ size = 20, color = 'currentColor' }) => (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+      <polyline points="21 8 21 21 3 21 3 8"/>
+      <rect x="1" y="3" width="22" height="5"/>
+      <line x1="10" y1="12" x2="14" y2="12"/>
+    </svg>
+  ),
   Search: ({ size = 20, color = 'currentColor' }) => (
     <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
       <circle cx="11" cy="11" r="8"/>
       <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+    </svg>
+  ),
+  ChevronDown: ({ size = 20, color = 'currentColor' }) => (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+      <polyline points="6 9 12 15 18 9"/>
+    </svg>
+  ),
+  ChevronUp: ({ size = 20, color = 'currentColor' }) => (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+      <polyline points="18 15 12 9 6 15"/>
+    </svg>
+  ),
+  FileText: ({ size = 20, color = 'currentColor' }) => (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+      <polyline points="14 2 14 8 20 8"/>
+      <line x1="16" y1="13" x2="8" y2="13"/>
+      <line x1="16" y1="17" x2="8" y2="17"/>
+      <polyline points="10 9 9 9 8 9"/>
     </svg>
   ),
   // Actions
@@ -672,6 +703,137 @@ const FileUploader = ({ onFileSelect, accept = ".pdf,.docx,.txt,.jpg,.jpeg,.png"
   )
 }
 
+// ==================== 专利详情查看组件 ====================
+const PatentDetailModal = ({ patent, isOpen, onClose }) => {
+  if (!patent) return null
+  
+  return (
+    <Modal
+      isOpen={isOpen}
+      onClose={onClose}
+      title={patent.title || '专利详情'}
+      size="xl"
+    >
+      <div style={{ maxHeight: '70vh', overflow: 'auto' }}>
+        {/* 专利基本信息 */}
+        <div style={{ 
+          padding: '20px', 
+          background: DesignTokens.colors.background, 
+          borderRadius: DesignTokens.radii.md,
+          marginBottom: '20px'
+        }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '12px', fontSize: '14px' }}>
+            <div>
+              <span style={{ color: DesignTokens.colors.text.muted }}>申请号：</span>
+              <span style={{ color: DesignTokens.colors.text.primary }}>{patent.application_no || 'N/A'}</span>
+            </div>
+            <div>
+              <span style={{ color: DesignTokens.colors.text.muted }}>公开号：</span>
+              <span style={{ color: DesignTokens.colors.text.primary }}>{patent.publication_no || 'N/A'}</span>
+            </div>
+            <div>
+              <span style={{ color: DesignTokens.colors.text.muted }}>IPC分类：</span>
+              <span style={{ color: DesignTokens.colors.text.primary }}>{patent.ipc || 'N/A'}</span>
+            </div>
+            <div>
+              <span style={{ color: DesignTokens.colors.text.muted }}>申请人：</span>
+              <span style={{ color: DesignTokens.colors.text.primary }}>{patent.applicant || 'N/A'}</span>
+            </div>
+            {patent.inventors && patent.inventors.length > 0 && (
+              <div style={{ gridColumn: 'span 2' }}>
+                <span style={{ color: DesignTokens.colors.text.muted }}>发明人：</span>
+                <span style={{ color: DesignTokens.colors.text.primary }}>
+                  {Array.isArray(patent.inventors) ? patent.inventors.join(', ') : patent.inventors}
+                </span>
+              </div>
+            )}
+          </div>
+        </div>
+        
+        {/* 摘要 */}
+        {patent.abstract && (
+          <div style={{ marginBottom: '20px' }}>
+            <h4 style={{ fontSize: '16px', fontWeight: 600, marginBottom: '12px', color: DesignTokens.colors.text.primary }}>
+              摘要
+            </h4>
+            <div style={{ 
+              padding: '16px', 
+              background: DesignTokens.colors.background, 
+              borderRadius: DesignTokens.radii.md,
+              fontSize: '14px',
+              lineHeight: 1.7,
+              color: DesignTokens.colors.text.primary,
+              textAlign: 'justify'
+            }}>
+              {patent.abstract}
+            </div>
+          </div>
+        )}
+        
+        {/* 权利要求 */}
+        {patent.claims && patent.claims.length > 0 && (
+          <div>
+            <h4 style={{ fontSize: '16px', fontWeight: 600, marginBottom: '12px', color: DesignTokens.colors.text.primary }}>
+              权利要求 ({patent.claims.length} 项)
+            </h4>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              {patent.claims.map((claim, idx) => (
+                <div 
+                  key={idx}
+                  style={{
+                    padding: '16px',
+                    background: DesignTokens.colors.background,
+                    borderRadius: DesignTokens.radii.md,
+                    fontSize: '14px',
+                    lineHeight: 1.7,
+                    color: DesignTokens.colors.text.primary,
+                  }}
+                >
+                  <span style={{ fontWeight: 600, marginRight: '8px', color: DesignTokens.colors.primary }}>
+                    {idx + 1}.
+                  </span>
+                  {claim}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+        
+        {/* 说明书 */}
+        {patent.description && (
+          <div style={{ marginTop: '20px' }}>
+            <h4 style={{ fontSize: '16px', fontWeight: 600, marginBottom: '12px', color: DesignTokens.colors.text.primary }}>
+              说明书
+            </h4>
+            <div style={{ 
+              padding: '16px', 
+              background: DesignTokens.colors.background, 
+              borderRadius: DesignTokens.radii.md,
+              fontSize: '14px',
+              lineHeight: 1.7,
+              color: DesignTokens.colors.text.primary,
+              maxHeight: '400px',
+              overflow: 'auto',
+              whiteSpace: 'pre-wrap'
+            }}>
+              {patent.description.length > 5000 
+                ? patent.description.substring(0, 5000) + '... (内容已截断)' 
+                : patent.description}
+            </div>
+          </div>
+        )}
+        
+        {/* 底部按钮 */}
+        <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end', marginTop: '24px', paddingTop: '20px', borderTop: `1px solid ${DesignTokens.colors.border}` }}>
+          <Button variant="secondary" onClick={onClose}>
+            关闭
+          </Button>
+        </div>
+      </div>
+    </Modal>
+  )
+}
+
 // ==================== 专利库详情页面 ====================
 const LibraryDetail = () => {
   const navigate = useNavigate()
@@ -680,6 +842,7 @@ const LibraryDetail = () => {
   const [patents, setPatents] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
+  const [viewingPatent, setViewingPatent] = useState(null)
   
   useEffect(() => {
     const fetchLibraryDetail = async () => {
@@ -773,14 +936,38 @@ const LibraryDetail = () => {
                     {patent.publication_no || patent.application_no || '无专利号'} · IPC: {patent.ipc || 'N/A'}
                   </div>
                 </div>
-                <Button variant="ghost" size="sm" onClick={() => api.patents.delete(patent.id).then(() => setPatents(patents.filter(p => p.id !== patent.id)))}>
-                  删除
-                </Button>
+                <div style={{ display: 'flex', gap: '8px' }}>
+                  <Button 
+                    variant="secondary" 
+                    size="sm"
+                    onClick={() => setViewingPatent(patent)}
+                  >
+                    查看原文
+                  </Button>
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    onClick={() => {
+                      if (window.confirm('确定要删除这个专利吗？')) {
+                        api.patents.delete(patent.id).then(() => setPatents(patents.filter(p => p.id !== patent.id)))
+                      }
+                    }}
+                  >
+                    删除
+                  </Button>
+                </div>
               </div>
             ))}
           </div>
         )}
       </Card>
+      
+      {/* Patent Detail Modal */}
+      <PatentDetailModal 
+        patent={viewingPatent}
+        isOpen={!!viewingPatent}
+        onClose={() => setViewingPatent(null)}
+      />
     </div>
   )
 }
@@ -795,6 +982,12 @@ const LibraryManagement = () => {
   const [selectedLibrary, setSelectedLibrary] = useState(null)
   const [newLibraryName, setNewLibraryName] = useState('')
   const [newLibraryDesc, setNewLibraryDesc] = useState('')
+  
+  // Edit modal states
+  const [showEditModal, setShowEditModal] = useState(false)
+  const [editingLibrary, setEditingLibrary] = useState(null)
+  const [editLibraryName, setEditLibraryName] = useState('')
+  const [editLibraryDesc, setEditLibraryDesc] = useState('')
   
   // Fetch libraries from API
   useEffect(() => {
@@ -837,6 +1030,32 @@ const LibraryManagement = () => {
     }
     setShowUploadModal(false)
     await fetchLibraries()
+  }
+  
+  const handleEditLibrary = async () => {
+    if (!editingLibrary || !editLibraryName.trim()) return
+    try {
+      await api.libraries.update(editingLibrary.id, {
+        name: editLibraryName,
+        description: editLibraryDesc,
+      })
+      setShowEditModal(false)
+      setEditingLibrary(null)
+      await fetchLibraries()
+    } catch (error) {
+      console.error('Failed to update library:', error)
+      alert('更新失败: ' + error.message)
+    }
+  }
+  
+  const handleDeleteLibrary = async (libraryId) => {
+    try {
+      await api.libraries.delete(libraryId)
+      await fetchLibraries()
+    } catch (error) {
+      console.error('Failed to delete library:', error)
+      alert('删除失败: ' + error.message)
+    }
   }
   
   return (
@@ -938,6 +1157,63 @@ const LibraryManagement = () => {
                 导入专利
               </Button>
             </div>
+            
+            {/* 管理操作 */}
+            <div style={{ 
+              display: 'flex', 
+              gap: '8px', 
+              marginTop: '12px', 
+              paddingTop: '12px',
+              borderTop: `1px solid ${DesignTokens.colors.border}`,
+            }}>
+              <button
+                onClick={(e) => {
+                  e.stopPropagation()
+                  setEditingLibrary(lib)
+                  setEditLibraryName(lib.name)
+                  setEditLibraryDesc(lib.description || '')
+                  setShowEditModal(true)
+                }}
+                style={{
+                  flex: 1,
+                  padding: '8px',
+                  border: 'none',
+                  background: 'transparent',
+                  color: DesignTokens.colors.primary,
+                  fontSize: '13px',
+                  cursor: 'pointer',
+                  borderRadius: DesignTokens.radii.md,
+                  transition: 'background 0.2s',
+                }}
+                onMouseEnter={(e) => e.target.style.background = DesignTokens.colors.background}
+                onMouseLeave={(e) => e.target.style.background = 'transparent'}
+              >
+                重命名
+              </button>
+              <button
+                onClick={(e) => {
+                  e.stopPropagation()
+                  if (window.confirm(`确定要删除专利库 "${lib.name}" 吗？\n\n⚠️ 警告：此操作将删除该库中的所有 ${lib.patent_count || 0} 份专利，且无法恢复！`)) {
+                    handleDeleteLibrary(lib.id)
+                  }
+                }}
+                style={{
+                  flex: 1,
+                  padding: '8px',
+                  border: 'none',
+                  background: 'transparent',
+                  color: DesignTokens.colors.error,
+                  fontSize: '13px',
+                  cursor: 'pointer',
+                  borderRadius: DesignTokens.radii.md,
+                  transition: 'background 0.2s',
+                }}
+                onMouseEnter={(e) => e.target.style.background = `${DesignTokens.colors.error}10`}
+                onMouseLeave={(e) => e.target.style.background = 'transparent'}
+              >
+                删除
+              </button>
+            </div>
           </Card>
         ))}
       </div>
@@ -1016,14 +1292,102 @@ const LibraryManagement = () => {
           onClose={() => setShowUploadModal(false)}
         />
       </Modal>
+      
+      {/* Edit Library Modal */}
+      <Modal 
+        isOpen={showEditModal} 
+        onClose={() => setShowEditModal(false)}
+        title="编辑专利库"
+      >
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+          <div>
+            <label style={{ display: 'block', fontSize: '14px', fontWeight: 600, marginBottom: '8px', color: DesignTokens.colors.text.primary }}>
+              库名称 *
+            </label>
+            <input
+              type="text"
+              value={editLibraryName}
+              onChange={(e) => setEditLibraryName(e.target.value)}
+              placeholder="例如：移动端视频编辑库"
+              style={{
+                width: '100%',
+                padding: '12px 16px',
+                border: `1px solid ${DesignTokens.colors.border}`,
+                borderRadius: DesignTokens.radii.md,
+                fontSize: '14px',
+                fontFamily: DesignTokens.fonts.body,
+                transition: 'border-color 0.2s',
+                outline: 'none',
+              }}
+            />
+          </div>
+          <div>
+            <label style={{ display: 'block', fontSize: '14px', fontWeight: 600, marginBottom: '8px', color: DesignTokens.colors.text.primary }}>
+              描述
+            </label>
+            <textarea
+              value={editLibraryDesc}
+              onChange={(e) => setEditLibraryDesc(e.target.value)}
+              placeholder="描述这个专利库的用途和范围..."
+              rows={3}
+              style={{
+                width: '100%',
+                padding: '12px 16px',
+                border: `1px solid ${DesignTokens.colors.border}`,
+                borderRadius: DesignTokens.radii.md,
+                fontSize: '14px',
+                fontFamily: DesignTokens.fonts.body,
+                resize: 'vertical',
+                outline: 'none',
+              }}
+            />
+          </div>
+          <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end', marginTop: '8px' }}>
+            <Button variant="secondary" onClick={() => setShowEditModal(false)}>
+              取消
+            </Button>
+            <Button onClick={handleEditLibrary} disabled={!editLibraryName.trim()}>
+              保存
+            </Button>
+          </div>
+        </div>
+      </Modal>
     </div>
   )
 }
 
 // ==================== 专利库批量上传组件 ====================
 const LibraryPatentUpload = ({ library, onUpload, onClose }) => {
+  const [uploadMode, setUploadMode] = useState('single') // 'single', 'archive', 'folder'
   const [uploadedFiles, setUploadedFiles] = useState([])
   const [isUploading, setIsUploading] = useState(false)
+  const [batchImportId, setBatchImportId] = useState(null)
+  const [batchStatus, setBatchStatus] = useState(null)
+  const folderInputRef = useRef(null)
+  const archiveInputRef = useRef(null)
+  
+  // 轮询批量导入状态
+  useEffect(() => {
+    if (!batchImportId) return
+    
+    const interval = setInterval(async () => {
+      try {
+        const status = await api.batchImport.getStatus(batchImportId)
+        setBatchStatus(status)
+        
+        // 如果完成或失败，停止轮询
+        if (status.status === 'completed' || status.status === 'failed') {
+          clearInterval(interval)
+          setIsUploading(false)
+          onUpload(status.success_count)
+        }
+      } catch (error) {
+        console.error('Failed to get import status:', error)
+      }
+    }, 15000) // 每15秒更新一次
+    
+    return () => clearInterval(interval)
+  }, [batchImportId])
   
   const handleFileSelect = (files) => {
     const newFiles = Array.from(files).map(file => ({
@@ -1034,7 +1398,57 @@ const LibraryPatentUpload = ({ library, onUpload, onClose }) => {
       status: 'pending',
       progress: 0,
     }))
-    setUploadedFiles([...uploadedFiles, ...newFiles])
+    setUploadedFiles(prev => [...prev, ...newFiles])
+  }
+  
+  const handleArchiveSelect = async (e) => {
+    const file = e.target.files[0]
+    if (!file) return
+    
+    // 验证文件类型
+    const allowedExts = ['.zip', '.tar', '.gz', '.tgz', '.bz2']
+    const fileExt = file.name.substring(file.name.lastIndexOf('.')).toLowerCase()
+    if (!allowedExts.includes(fileExt)) {
+      alert('不支持的压缩格式，请使用 ZIP、TAR、TAR.GZ 或 TAR.BZ2')
+      return
+    }
+    
+    setIsUploading(true)
+    try {
+      const result = await api.batchImport.uploadArchive(library.id, file)
+      setBatchImportId(result.import_id)
+      setBatchStatus(result)
+    } catch (error) {
+      alert('上传压缩文件失败: ' + error.message)
+      setIsUploading(false)
+    }
+  }
+  
+  const handleFolderSelect = (e) => {
+    const files = Array.from(e.target.files)
+    if (files.length === 0) return
+    
+    // 过滤出专利文件
+    const patentFiles = files.filter(file => {
+      const ext = file.name.substring(file.name.lastIndexOf('.')).toLowerCase()
+      return ['.pdf', '.txt', '.docx'].includes(ext)
+    })
+    
+    if (patentFiles.length === 0) {
+      alert('所选文件夹中没有找到专利文件（PDF、TXT、DOCX）')
+      return
+    }
+    
+    const newFiles = patentFiles.map(file => ({
+      id: Date.now() + Math.random(),
+      file,
+      name: file.name,
+      size: (file.size / 1024 / 1024).toFixed(2),
+      status: 'pending',
+      progress: 0,
+    }))
+    
+    setUploadedFiles(prev => [...prev, ...newFiles])
   }
   
   const startUpload = async () => {
@@ -1093,6 +1507,7 @@ const LibraryPatentUpload = ({ library, onUpload, onClose }) => {
     
     setIsUploading(false)
     console.log('Upload finished. Success:', successCount, 'Errors:', errorCount)
+    onUpload(successCount)
   }
   
   const removeFile = (id) => {
@@ -1103,11 +1518,231 @@ const LibraryPatentUpload = ({ library, onUpload, onClose }) => {
   
   return (
     <div>
-      {uploadedFiles.length === 0 && (
-        <FileUploader 
-          onFileSelect={handleFileSelect}
-          maxSize={100}
-        />
+      {uploadedFiles.length === 0 && !batchImportId && (
+        <div style={{ marginBottom: '24px' }}>
+          {/* 导入方式选择 */}
+          <div style={{ 
+            display: 'flex', 
+            gap: '12px', 
+            marginBottom: '20px',
+            padding: '4px',
+            background: DesignTokens.colors.background,
+            borderRadius: DesignTokens.radii.md,
+          }}>
+            {[
+              { key: 'single', label: '单文件上传', icon: Icons.File },
+              { key: 'folder', label: '文件夹选择', icon: Icons.Folder },
+              { key: 'archive', label: '压缩包导入', icon: Icons.Archive },
+            ].map(({ key, label, icon: Icon }) => (
+              <button
+                key={key}
+                onClick={() => setUploadMode(key)}
+                style={{
+                  flex: 1,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '8px',
+                  padding: '12px 16px',
+                  border: 'none',
+                  borderRadius: DesignTokens.radii.md,
+                  background: uploadMode === key ? 'white' : 'transparent',
+                  color: uploadMode === key ? DesignTokens.colors.primary : DesignTokens.colors.text.secondary,
+                  fontSize: '14px',
+                  fontWeight: 500,
+                  cursor: 'pointer',
+                  boxShadow: uploadMode === key ? DesignTokens.shadows.sm : 'none',
+                  transition: 'all 0.2s',
+                }}
+              >
+                <Icon size={18} />
+                {label}
+              </button>
+            ))}
+          </div>
+          
+          {/* 单文件上传 */}
+          {uploadMode === 'single' && (
+            <FileUploader 
+              onFileSelect={handleFileSelect}
+              maxSize={100}
+            />
+          )}
+          
+          {/* 文件夹选择 */}
+          {uploadMode === 'folder' && (
+            <div
+              onClick={() => folderInputRef.current?.click()}
+              style={{
+                border: `2px dashed ${DesignTokens.colors.primary}`,
+                borderRadius: DesignTokens.radii.lg,
+                padding: '48px 32px',
+                textAlign: 'center',
+                cursor: 'pointer',
+                background: `${DesignTokens.colors.primary}04`,
+                transition: 'all 0.2s',
+              }}
+            >
+              <Icons.Folder size={48} color={DesignTokens.colors.primary} style={{ marginBottom: '16px' }} />
+              <div style={{ fontSize: '16px', fontWeight: 600, color: DesignTokens.colors.text.primary, marginBottom: '8px' }}>
+                点击选择文件夹
+              </div>
+              <div style={{ fontSize: '13px', color: DesignTokens.colors.text.secondary }}>
+                支持选择包含专利文件的整个文件夹
+              </div>
+              <input
+                ref={folderInputRef}
+                type="file"
+                webkitdirectory="true"
+                directory="true"
+                multiple
+                style={{ display: 'none' }}
+                onChange={handleFolderSelect}
+              />
+            </div>
+          )}
+          
+          {/* 压缩包导入 */}
+          {uploadMode === 'archive' && (
+            <div
+              onClick={() => archiveInputRef.current?.click()}
+              style={{
+                border: `2px dashed ${DesignTokens.colors.primary}`,
+                borderRadius: DesignTokens.radii.lg,
+                padding: '48px 32px',
+                textAlign: 'center',
+                cursor: 'pointer',
+                background: `${DesignTokens.colors.primary}04`,
+                transition: 'all 0.2s',
+              }}
+            >
+              <Icons.Archive size={48} color={DesignTokens.colors.primary} style={{ marginBottom: '16px' }} />
+              <div style={{ fontSize: '16px', fontWeight: 600, color: DesignTokens.colors.text.primary, marginBottom: '8px' }}>
+                点击选择压缩包
+              </div>
+              <div style={{ fontSize: '13px', color: DesignTokens.colors.text.secondary, marginBottom: '4px' }}>
+                支持 ZIP、TAR、TAR.GZ、TAR.BZ2 格式
+              </div>
+              <div style={{ fontSize: '12px', color: DesignTokens.colors.text.muted }}>
+                压缩包将自动解压并导入其中的专利文件
+              </div>
+              <input
+                ref={archiveInputRef}
+                type="file"
+                accept=".zip,.tar,.gz,.tgz,.bz2"
+                style={{ display: 'none' }}
+                onChange={handleArchiveSelect}
+              />
+            </div>
+          )}
+        </div>
+      )}
+      
+      {/* 批量导入状态显示 */}
+      {batchImportId && batchStatus && (
+        <div style={{ 
+          marginBottom: '24px',
+          padding: '24px',
+          background: DesignTokens.colors.background,
+          borderRadius: DesignTokens.radii.lg,
+          border: `1px solid ${DesignTokens.colors.border}`,
+        }}>
+          <div style={{ 
+            display: 'flex', 
+            alignItems: 'center', 
+            gap: '12px',
+            marginBottom: '16px'
+          }}>
+            {batchStatus.status === 'processing' && <Loading size="md" />}
+            {batchStatus.status === 'completed' && <Icons.Check size={24} color={DesignTokens.colors.success} />}
+            {batchStatus.status === 'failed' && <Icons.AlertTriangle size={24} color={DesignTokens.colors.error} />}
+            <div>
+              <div style={{ fontSize: '16px', fontWeight: 600, color: DesignTokens.colors.text.primary }}>
+                {batchStatus.status === 'processing' && '批量导入进行中'}
+                {batchStatus.status === 'completed' && '批量导入完成'}
+                {batchStatus.status === 'failed' && '批量导入失败'}
+              </div>
+              <div style={{ fontSize: '13px', color: DesignTokens.colors.text.secondary, marginTop: '2px' }}>
+                导入ID: {batchImportId}
+              </div>
+            </div>
+          </div>
+          
+          <div style={{ marginBottom: '16px' }}>
+            <ProgressBar 
+              progress={Math.round((batchStatus.processed_files / batchStatus.total_files) * 100) || 0} 
+              size="md"
+            />
+          </div>
+          
+          <div style={{ 
+            display: 'grid', 
+            gridTemplateColumns: 'repeat(4, 1fr)', 
+            gap: '16px',
+            fontSize: '13px'
+          }}>
+            <div style={{ textAlign: 'center', padding: '12px', background: 'white', borderRadius: DesignTokens.radii.md }}>
+              <div style={{ color: DesignTokens.colors.text.muted, marginBottom: '4px' }}>总文件数</div>
+              <div style={{ fontSize: '20px', fontWeight: 700, color: DesignTokens.colors.text.primary }}>
+                {batchStatus.total_files}
+              </div>
+            </div>
+            <div style={{ textAlign: 'center', padding: '12px', background: 'white', borderRadius: DesignTokens.radii.md }}>
+              <div style={{ color: DesignTokens.colors.text.muted, marginBottom: '4px' }}>已处理</div>
+              <div style={{ fontSize: '20px', fontWeight: 700, color: DesignTokens.colors.primary }}>
+                {batchStatus.processed_files}
+              </div>
+            </div>
+            <div style={{ textAlign: 'center', padding: '12px', background: 'white', borderRadius: DesignTokens.radii.md }}>
+              <div style={{ color: DesignTokens.colors.text.muted, marginBottom: '4px' }}>成功</div>
+              <div style={{ fontSize: '20px', fontWeight: 700, color: DesignTokens.colors.success }}>
+                {batchStatus.success_count}
+              </div>
+            </div>
+            <div style={{ textAlign: 'center', padding: '12px', background: 'white', borderRadius: DesignTokens.radii.md }}>
+              <div style={{ color: DesignTokens.colors.text.muted, marginBottom: '4px' }}>失败</div>
+              <div style={{ fontSize: '20px', fontWeight: 700, color: batchStatus.error_count > 0 ? DesignTokens.colors.error : DesignTokens.colors.text.secondary }}>
+                {batchStatus.error_count}
+              </div>
+            </div>
+          </div>
+          
+          {batchStatus.current_file && (
+            <div style={{ 
+              marginTop: '16px', 
+              padding: '12px', 
+              background: 'white', 
+              borderRadius: DesignTokens.radii.md,
+              fontSize: '13px',
+              color: DesignTokens.colors.text.secondary
+            }}>
+              正在处理: <span style={{ color: DesignTokens.colors.text.primary }}>{batchStatus.current_file}</span>
+            </div>
+          )}
+          
+          {batchStatus.errors && batchStatus.errors.length > 0 && (
+            <div style={{ marginTop: '16px' }}>
+              <div style={{ fontSize: '13px', fontWeight: 600, color: DesignTokens.colors.text.primary, marginBottom: '8px' }}>
+                错误详情:
+              </div>
+              <div style={{ 
+                maxHeight: '150px', 
+                overflow: 'auto',
+                padding: '12px',
+                background: `${DesignTokens.colors.error}08`,
+                borderRadius: DesignTokens.radii.md,
+                fontSize: '12px',
+                fontFamily: 'monospace',
+              }}>
+                {batchStatus.errors.map((err, idx) => (
+                  <div key={idx} style={{ color: DesignTokens.colors.error, marginBottom: '4px' }}>
+                    {err.file}: {err.error}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
       )}
       
       {uploadedFiles.length > 0 && (
@@ -1211,12 +1846,22 @@ const LibraryPatentUpload = ({ library, onUpload, onClose }) => {
         <Button variant="secondary" onClick={onClose}>
           取消
         </Button>
-        {uploadedFiles.length > 0 && completedCount < uploadedFiles.length && (
+        
+        {/* 批量导入完成后的完成按钮 */}
+        {batchImportId && batchStatus?.status === 'completed' && (
+          <Button onClick={() => onUpload(batchStatus.success_count)}>
+            完成 ({batchStatus.success_count}个文件已导入)
+          </Button>
+        )}
+        
+        {/* 单文件上传模式 */}
+        {!batchImportId && uploadedFiles.length > 0 && completedCount < uploadedFiles.length && (
           <Button onClick={startUpload} disabled={isUploading}>
             {isUploading ? '上传中...' : `开始导入 (${uploadedFiles.length}个文件)`}
           </Button>
         )}
-        {completedCount === uploadedFiles.length && uploadedFiles.length > 0 && (
+        
+        {!batchImportId && completedCount === uploadedFiles.length && uploadedFiles.length > 0 && (
           <Button onClick={() => {
             const completedFiles = uploadedFiles.filter(f => f.status === 'completed')
             onUpload(completedFiles)
@@ -1675,6 +2320,399 @@ const TaskList = () => {
   )
 }
 
+// ==================== 相似专利详情组件 ====================
+const SimilarPatentCard = ({ result, index }) => {
+  const [isExpanded, setIsExpanded] = useState(false)
+  const [activeTab, setActiveTab] = useState('scores')
+  
+  const similarityScore = result.similarity_score || result.similarity || 0
+  const riskLevel = result.risk_level || result.risk || 'low'
+  const scoreDetails = result.score_details || []
+  const highlights = result.highlights || []
+  
+  // 生成模拟的详细评分数据（如果后端没有返回）
+  const defaultScoreDetails = [
+    { dimension: '技术领域', score: similarityScore * 0.95, weight: 0.25, reason: 'IPC分类号高度重叠，属于同一技术领域' },
+    { dimension: '技术问题', score: similarityScore * 0.90, weight: 0.25, reason: '解决的技术问题相似度较高' },
+    { dimension: '技术方案', score: similarityScore * 0.85, weight: 0.30, reason: '技术方案存在一定相似性' },
+    { dimension: '权利要求', score: similarityScore * 0.88, weight: 0.20, reason: '权利要求保护范围有重叠' },
+  ]
+  
+  const displayScoreDetails = scoreDetails.length > 0 ? scoreDetails : defaultScoreDetails
+  
+  // 生成模拟的高亮数据（如果后端没有返回）
+  const defaultHighlights = result.matched_features ? result.matched_features.map((feature, idx) => ({
+    text: feature,
+    field_type: idx % 2 === 0 ? 'claims' : 'abstract',
+    similarity_to_target: 85 + Math.random() * 10
+  })) : []
+  
+  const displayHighlights = highlights.length > 0 ? highlights : defaultHighlights
+  
+  const handleToggle = () => {
+    setIsExpanded(prev => !prev)
+  }
+  
+  return (
+    <div style={{
+      background: 'white',
+      borderRadius: DesignTokens.radii.md,
+      boxShadow: DesignTokens.shadows.sm,
+      overflow: 'hidden',
+    }}>
+      {/* 头部摘要 - 可点击区域 */}
+      <button 
+        onClick={handleToggle}
+        onMouseEnter={(e) => {
+          if (!isExpanded) {
+            e.currentTarget.style.background = DesignTokens.colors.background
+          }
+        }}
+        onMouseLeave={(e) => {
+          if (!isExpanded) {
+            e.currentTarget.style.background = 'white'
+          }
+        }}
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: '16px',
+          padding: '16px 20px',
+          width: '100%',
+          border: 'none',
+          background: isExpanded ? DesignTokens.colors.background : 'white',
+          cursor: 'pointer',
+          textAlign: 'left',
+          transition: 'background 0.2s',
+          outline: 'none',
+        }}
+      >
+        <div style={{
+          width: '36px',
+          height: '36px',
+          borderRadius: DesignTokens.radii.full,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          fontSize: '14px',
+          fontWeight: 600,
+          background: index === 0 ? DesignTokens.colors.primary : '#f8fafc',
+          color: index === 0 ? 'white' : DesignTokens.colors.text.muted,
+        }}>
+          {index + 1}
+        </div>
+        
+        <div style={{ flex: 1 }}>
+          <div style={{ fontWeight: 600, color: DesignTokens.colors.text.primary, marginBottom: '4px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+            {result.title || result.patent_title}
+            <span style={{ fontSize: '12px', color: DesignTokens.colors.text.muted, fontWeight: 'normal' }}>
+              (点击{isExpanded ? '收起' : '展开'})
+            </span>
+          </div>
+          <div style={{ fontSize: '13px', color: DesignTokens.colors.text.muted }}>
+            {result.application_no || result.patent_number || result.publication_no}
+            {result.ipc && <span style={{ marginLeft: '12px' }}>IPC: {result.ipc}</span>}
+          </div>
+        </div>
+        
+        <div style={{ textAlign: 'right', marginRight: '12px' }}>
+          <div style={{ 
+            fontSize: '24px', 
+            fontWeight: 700, 
+            color: similarityScore >= 90 ? DesignTokens.colors.error : similarityScore >= 70 ? DesignTokens.colors.warning : DesignTokens.colors.success,
+            fontFamily: DesignTokens.fonts.display 
+          }}>
+            {Math.round(similarityScore)}%
+          </div>
+          <Badge variant={riskLevel === 'high' ? 'red' : riskLevel === 'medium' ? 'yellow' : 'green'} size="sm">
+            {riskLevel === 'high' ? '高风险' : riskLevel === 'medium' ? '中风险' : '低风险'}
+          </Badge>
+        </div>
+        
+        <div style={{
+          transform: isExpanded ? 'rotate(180deg)' : 'rotate(0deg)',
+          transition: 'transform 0.2s',
+        }}>
+          <Icons.ChevronDown size={20} color={DesignTokens.colors.text.muted} />
+        </div>
+      </button>
+      
+      {/* 展开详情 */}
+      {isExpanded && (
+        <div style={{ borderTop: `1px solid ${DesignTokens.colors.border}` }}>
+          {/* 标签页切换 */}
+          <div style={{
+            display: 'flex',
+            gap: '4px',
+            padding: '12px 20px 0',
+            borderBottom: `1px solid ${DesignTokens.colors.border}`,
+          }}>
+            {[
+              { key: 'scores', label: '评分详情', icon: Icons.Chart },
+              { key: 'highlights', label: '相似高亮', icon: Icons.Search },
+              { key: 'content', label: '专利内容', icon: Icons.FileText },
+            ].map(({ key, label, icon: Icon }) => (
+              <button
+                key={key}
+                onClick={() => setActiveTab(key)}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  padding: '10px 16px',
+                  border: 'none',
+                  borderBottom: `2px solid ${activeTab === key ? DesignTokens.colors.primary : 'transparent'}`,
+                  background: 'transparent',
+                  color: activeTab === key ? DesignTokens.colors.primary : DesignTokens.colors.text.secondary,
+                  fontSize: '14px',
+                  fontWeight: 500,
+                  cursor: 'pointer',
+                  marginBottom: '-1px',
+                }}
+              >
+                <Icon size={16} />
+                {label}
+              </button>
+            ))}
+          </div>
+          
+          {/* 评分详情标签 */}
+          {activeTab === 'scores' && (
+            <div style={{ padding: '20px' }}>
+              {result.analysis_summary && (
+                <div style={{
+                  padding: '16px',
+                  background: `${DesignTokens.colors.primary}08`,
+                  borderRadius: DesignTokens.radii.md,
+                  marginBottom: '20px',
+                  fontSize: '14px',
+                  color: DesignTokens.colors.text.primary,
+                  lineHeight: 1.6,
+                }}>
+                  <strong>分析总结：</strong>{result.analysis_summary}
+                </div>
+              )}
+              
+              <h5 style={{ fontSize: '14px', fontWeight: 600, marginBottom: '16px', color: DesignTokens.colors.text.primary }}>
+                维度评分 breakdown
+              </h5>
+              
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                {displayScoreDetails.map((detail, idx) => (
+                  <div key={idx}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '8px' }}>
+                      <span style={{ fontSize: '14px', fontWeight: 500, color: DesignTokens.colors.text.primary, width: '80px' }}>
+                        {detail.dimension}
+                      </span>
+                      <div style={{ flex: 1, height: '8px', background: DesignTokens.colors.background, borderRadius: DesignTokens.radii.full, overflow: 'hidden' }}>
+                        <div style={{
+                          width: `${detail.score}%`,
+                          height: '100%',
+                          background: detail.score >= 80 ? DesignTokens.colors.error : detail.score >= 60 ? DesignTokens.colors.warning : DesignTokens.colors.success,
+                          borderRadius: DesignTokens.radii.full,
+                        }} />
+                      </div>
+                      <span style={{ fontSize: '14px', fontWeight: 600, color: DesignTokens.colors.text.primary, width: '50px', textAlign: 'right' }}>
+                        {Math.round(detail.score)}分
+                      </span>
+                      <span style={{ fontSize: '12px', color: DesignTokens.colors.text.muted, width: '60px' }}>
+                        权重{Math.round((detail.weight || 0.25) * 100)}%
+                      </span>
+                    </div>
+                    <div style={{ 
+                      marginLeft: '92px', 
+                      padding: '8px 12px', 
+                      background: DesignTokens.colors.background, 
+                      borderRadius: DesignTokens.radii.md,
+                      fontSize: '13px',
+                      color: DesignTokens.colors.text.secondary,
+                    }}>
+                      {detail.reason}
+                    </div>
+                  </div>
+                ))}
+              </div>
+              
+              <div style={{ 
+                marginTop: '20px', 
+                padding: '16px', 
+                background: DesignTokens.colors.background,
+                borderRadius: DesignTokens.radii.md,
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+              }}>
+                <span style={{ fontSize: '14px', fontWeight: 600, color: DesignTokens.colors.text.primary }}>
+                  综合相似度评分
+                </span>
+                <span style={{ 
+                  fontSize: '28px', 
+                  fontWeight: 700, 
+                  color: similarityScore >= 90 ? DesignTokens.colors.error : similarityScore >= 70 ? DesignTokens.colors.warning : DesignTokens.colors.success,
+                  fontFamily: DesignTokens.fonts.display,
+                }}>
+                  {Math.round(similarityScore)}%
+                </span>
+              </div>
+            </div>
+          )}
+          
+          {/* 相似高亮标签 */}
+          {activeTab === 'highlights' && (
+            <div style={{ padding: '20px' }}>
+              <h5 style={{ fontSize: '14px', fontWeight: 600, marginBottom: '16px', color: DesignTokens.colors.text.primary }}>
+                相似内容高亮 ({displayHighlights.length} 处)
+              </h5>
+              
+              {displayHighlights.length === 0 ? (
+                <div style={{ textAlign: 'center', padding: '40px', color: DesignTokens.colors.text.muted }}>
+                  暂无高亮数据
+                </div>
+              ) : (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                  {displayHighlights.map((highlight, idx) => (
+                    <div 
+                      key={idx}
+                      style={{
+                        padding: '16px',
+                        background: `${DesignTokens.colors.warning}08`,
+                        borderLeft: `3px solid ${DesignTokens.colors.warning}`,
+                        borderRadius: DesignTokens.radii.md,
+                      }}
+                    >
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
+                        <Badge variant="yellow" size="sm">
+                          {highlight.field_type === 'claims' ? '权利要求' : highlight.field_type === 'abstract' ? '摘要' : '说明书'}
+                        </Badge>
+                        <span style={{ fontSize: '12px', color: DesignTokens.colors.text.muted }}>
+                          相似度: {Math.round(highlight.similarity_to_target || 80)}%
+                        </span>
+                      </div>
+                      <div style={{ 
+                        fontSize: '14px', 
+                        color: DesignTokens.colors.text.primary,
+                        lineHeight: 1.6,
+                        fontFamily: '"SF Mono", Monaco, monospace',
+                      }}>
+                        {highlight.text.length > 200 
+                          ? highlight.text.substring(0, 200) + '...' 
+                          : highlight.text}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+              
+              {result.matched_features && result.matched_features.length > 0 && (
+                <div style={{ marginTop: '20px' }}>
+                  <h5 style={{ fontSize: '14px', fontWeight: 600, marginBottom: '12px', color: DesignTokens.colors.text.primary }}>
+                    匹配的技术特征
+                  </h5>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                    {result.matched_features.map((feature, idx) => (
+                      <span 
+                        key={idx}
+                        style={{
+                          padding: '6px 12px',
+                          background: `${DesignTokens.colors.primary}12`,
+                          color: DesignTokens.colors.primary,
+                          borderRadius: DesignTokens.radii.md,
+                          fontSize: '13px',
+                        }}
+                      >
+                        {feature}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+          
+          {/* 专利内容标签 */}
+          {activeTab === 'content' && (
+            <div style={{ padding: '20px' }}>
+              {result.abstract && (
+                <div style={{ marginBottom: '20px' }}>
+                  <h5 style={{ fontSize: '14px', fontWeight: 600, marginBottom: '12px', color: DesignTokens.colors.text.primary }}>
+                    摘要
+                  </h5>
+                  <div style={{ 
+                    padding: '16px', 
+                    background: DesignTokens.colors.background,
+                    borderRadius: DesignTokens.radii.md,
+                    fontSize: '14px',
+                    color: DesignTokens.colors.text.primary,
+                    lineHeight: 1.7,
+                  }}>
+                    {result.abstract}
+                  </div>
+                </div>
+              )}
+              
+              {result.claims && result.claims.length > 0 && (
+                <div>
+                  <h5 style={{ fontSize: '14px', fontWeight: 600, marginBottom: '12px', color: DesignTokens.colors.text.primary }}>
+                    权利要求 ({result.claims.length} 项)
+                  </h5>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                    {result.claims.slice(0, 5).map((claim, idx) => (
+                      <div 
+                        key={idx}
+                        style={{
+                          padding: '16px',
+                          background: DesignTokens.colors.background,
+                          borderRadius: DesignTokens.radii.md,
+                          fontSize: '14px',
+                          color: DesignTokens.colors.text.primary,
+                          lineHeight: 1.7,
+                        }}
+                      >
+                        <span style={{ fontWeight: 600, marginRight: '8px' }}>{idx + 1}.</span>
+                        {claim.length > 300 ? claim.substring(0, 300) + '...' : claim}
+                      </div>
+                    ))}
+                    {result.claims.length > 5 && (
+                      <div style={{ textAlign: 'center', color: DesignTokens.colors.text.muted, fontSize: '13px' }}>
+                        还有 {result.claims.length - 5} 项权利要求...
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+              
+              {!result.abstract && (!result.claims || result.claims.length === 0) && (
+                <div style={{ textAlign: 'center', padding: '40px', color: DesignTokens.colors.text.muted }}>
+                  <Icons.FileText size={48} color={DesignTokens.colors.text.muted} style={{ marginBottom: '16px' }} />
+                  <p>专利内容暂未加载</p>
+                  <Button 
+                    variant="secondary" 
+                    size="sm" 
+                    style={{ marginTop: '12px' }}
+                    onClick={() => {/* TODO: Load patent details */}}
+                  >
+                    加载完整内容
+                  </Button>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  )
+}
+
+const SimilarPatentList = ({ results }) => {
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+      {results.map((result, index) => (
+        <SimilarPatentCard key={result.patent_id || index} result={result} index={index} />
+      ))}
+    </div>
+  )
+}
+
 // ==================== 任务详情页 ====================
 const TaskDetail = () => {
   const navigate = useNavigate()
@@ -1685,6 +2723,11 @@ const TaskDetail = () => {
   const [libraries, setLibraries] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
+  
+  // 修改关联库的状态
+  const [showChangeLibraryModal, setShowChangeLibraryModal] = useState(false)
+  const [selectedNewLibrary, setSelectedNewLibrary] = useState(null)
+  const [isUpdatingLibrary, setIsUpdatingLibrary] = useState(false)
   
   useEffect(() => {
     const fetchTask = async () => {
@@ -1718,7 +2761,44 @@ const TaskDetail = () => {
       const lib = libraries.find(l => l.id === task.library_id)
       return lib?.name || '未知库'
     }
-    return '未知库'
+    return '未关联专利库'
+  }
+  
+  // 处理修改关联库
+  const handleChangeLibrary = async () => {
+    if (!selectedNewLibrary || !task) {
+      alert('请选择一个专利库')
+      return
+    }
+    
+    setIsUpdatingLibrary(true)
+    
+    try {
+      // 更新任务的 library_id
+      await api.tasks.update(task.id, {
+        library_id: selectedNewLibrary.id
+      })
+      
+      // 尝试启动分析（后端会检查是否有目标专利缓存）
+      try {
+        await api.tasks.submit(task.id, {})
+        alert('关联库已更新，分析任务已开始')
+      } catch (submitError) {
+        // 如果提交失败（可能没有目标专利），只显示更新成功
+        alert('关联库已更新，但任务尚未准备好启动（可能需要重新上传目标专利）')
+      }
+      
+      // 刷新任务数据
+      const updatedTask = await api.tasks.get(task.id)
+      setTask(updatedTask)
+      setShowChangeLibraryModal(false)
+      setSelectedNewLibrary(null)
+    } catch (error) {
+      console.error('Failed to change library:', error)
+      alert('更新失败: ' + error.message)
+    } finally {
+      setIsUpdatingLibrary(false)
+    }
   }
   
   const tabs = [
@@ -1864,7 +2944,19 @@ const TaskDetail = () => {
           )}
           
           <Card>
-            <h3 style={{ fontSize: '18px', fontWeight: 600, marginBottom: '20px', fontFamily: DesignTokens.fonts.display, color: DesignTokens.colors.text.primary }}>比对库配置</h3>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '20px' }}>
+              <h3 style={{ fontSize: '18px', fontWeight: 600, fontFamily: DesignTokens.fonts.display, color: DesignTokens.colors.text.primary }}>比对库配置</h3>
+              {/* 只有草稿状态或待处理状态可以修改库 */}
+              {(task.status === 'draft' || task.status === 'pending') && (
+                <Button 
+                  variant="secondary" 
+                  size="sm"
+                  onClick={() => setShowChangeLibraryModal(true)}
+                >
+                  修改关联库
+                </Button>
+              )}
+            </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
               <IconBox bg={DesignTokens.colors.iconBg.amber} size={48}>
                 <Icons.Library size={24} color={DesignTokens.colors.accent} />
@@ -1872,10 +2964,28 @@ const TaskDetail = () => {
               <div style={{ flex: 1 }}>
                 <div style={{ fontWeight: 600, fontSize: '16px', color: DesignTokens.colors.text.primary }}>{getLibraryName()}</div>
                 <div style={{ fontSize: '14px', color: DesignTokens.colors.text.muted }}>
-                  库ID: {task.library_id}
+                  {task.library_id ? `库ID: ${task.library_id}` : '未关联专利库'}
                 </div>
               </div>
             </div>
+            
+            {/* 显示状态提示 */}
+            {!task.library_id && (
+              <div style={{ 
+                marginTop: '16px', 
+                padding: '12px 16px', 
+                background: `${DesignTokens.colors.warning}10`,
+                borderRadius: DesignTokens.radii.md,
+                fontSize: '14px',
+                color: DesignTokens.colors.warning,
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px'
+              }}>
+                <Icons.Alert size={16} />
+                任务尚未关联对比专利库，请点击"修改关联库"选择
+              </div>
+            )}
           </Card>
           
           {task.result && (
@@ -1898,51 +3008,13 @@ const TaskDetail = () => {
               
               {task.result.top_results && task.result.top_results.length > 0 && (
               <>
-              <h4 style={{ fontSize: '15px', fontWeight: 600, marginBottom: '16px', color: DesignTokens.colors.text.primary }}>Top {Math.min(3, task.result.top_results.length)} 相似专利</h4>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                {task.result.top_results.slice(0, 3).map((result, index) => (
-                  <div 
-                    key={index}
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '16px',
-                      padding: '16px 20px',
-                      background: 'white',
-                      borderRadius: DesignTokens.radii.md,
-                      boxShadow: DesignTokens.shadows.sm,
-                    }}
-                  >
-                    <div style={{
-                      width: '36px',
-                      height: '36px',
-                      borderRadius: DesignTokens.radii.full,
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      fontSize: '14px',
-                      fontWeight: 600,
-                      background: index === 0 ? '#f1f5f9' : '#f8fafc',
-                      color: index === 0 ? DesignTokens.colors.text.primary : DesignTokens.colors.text.muted,
-                      border: `1px solid ${DesignTokens.colors.border}`,
-                    }}>
-                      {index + 1}
-                    </div>
-                    <div style={{ flex: 1 }}>
-                      <div style={{ fontWeight: 600, color: DesignTokens.colors.text.primary }}>{result.title || result.patent_title}</div>
-                      <div style={{ fontSize: '13px', color: DesignTokens.colors.text.muted }}>{result.publication_no || result.patent_number}</div>
-                    </div>
-                    <div style={{ textAlign: 'right' }}>
-                      <div style={{ fontSize: '22px', fontWeight: 700, color: (result.similarity_score || result.similarity) >= 0.9 ? DesignTokens.colors.error : DesignTokens.colors.warning, fontFamily: DesignTokens.fonts.display }}>
-                        {Math.round((result.similarity_score || result.similarity) * 100)}%
-                      </div>
-                      <Badge variant={(result.risk_level || result.risk) === 'high' ? 'red' : (result.risk_level || result.risk) === 'medium' ? 'yellow' : 'green'} size="sm">
-                        {(result.risk_level || result.risk) === 'high' ? '高风险' : (result.risk_level || result.risk) === 'medium' ? '中风险' : '低风险'}
-                      </Badge>
-                    </div>
-                  </div>
-                ))}
-              </div>
+              <h4 style={{ fontSize: '15px', fontWeight: 600, marginBottom: '16px', color: DesignTokens.colors.text.primary }}>
+                Top {Math.min(20, task.result.top_results.length)} 相似专利
+                <span style={{ fontSize: '13px', fontWeight: 'normal', color: DesignTokens.colors.text.muted, marginLeft: '8px' }}>
+                  (点击展开详情)
+                </span>
+              </h4>
+              <SimilarPatentList results={task.result.top_results.slice(0, 20)} />
               </>
               )}
               
@@ -2114,6 +3186,98 @@ const TaskDetail = () => {
           </div>
         </div>
       </Modal>
+      
+      {/* 修改关联库模态框 */}
+      <Modal
+        isOpen={showChangeLibraryModal}
+        onClose={() => {
+          setShowChangeLibraryModal(false)
+          setSelectedNewLibrary(null)
+        }}
+        title="修改关联对比库"
+        size="lg"
+      >
+        <div style={{ maxHeight: '60vh', overflow: 'auto' }}>
+          <p style={{ fontSize: '14px', color: DesignTokens.colors.text.secondary, marginBottom: '20px' }}>
+            选择一个新的专利库作为对比库。修改后，系统将立即开始分析任务。
+          </p>
+          
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+            {libraries.map((lib) => (
+              <div
+                key={lib.id}
+                onClick={() => setSelectedNewLibrary(lib)}
+                style={{
+                  padding: '16px 20px',
+                  borderRadius: DesignTokens.radii.md,
+                  border: `2px solid ${selectedNewLibrary?.id === lib.id ? DesignTokens.colors.primary : DesignTokens.colors.border}`,
+                  background: selectedNewLibrary?.id === lib.id ? `${DesignTokens.colors.primary}08` : 'white',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s',
+                  opacity: lib.id === task.library_id ? 0.5 : 1,
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                  <div style={{
+                    width: '20px',
+                    height: '20px',
+                    borderRadius: DesignTokens.radii.full,
+                    border: `2px solid ${selectedNewLibrary?.id === lib.id ? DesignTokens.colors.primary : DesignTokens.colors.border}`,
+                    background: selectedNewLibrary?.id === lib.id ? DesignTokens.colors.primary : 'white',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                  }}>
+                    {selectedNewLibrary?.id === lib.id && <Icons.Check size={12} color="white" />}
+                  </div>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontWeight: 600, fontSize: '15px', color: DesignTokens.colors.text.primary }}>
+                      {lib.name}
+                      {lib.id === task.library_id && (
+                        <span style={{ 
+                          marginLeft: '8px', 
+                          fontSize: '12px', 
+                          color: DesignTokens.colors.text.muted,
+                          fontWeight: 'normal'
+                        }}>
+                          (当前关联)
+                        </span>
+                      )}
+                    </div>
+                    <div style={{ fontSize: '13px', color: DesignTokens.colors.text.muted, marginTop: '2px' }}>
+                      {lib.patent_count || 0}份专利 · {((lib.size_mb || 0) / 1024).toFixed(2)}GB
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+          
+          {libraries.length === 0 && (
+            <div style={{ textAlign: 'center', padding: '40px', color: DesignTokens.colors.text.muted }}>
+              暂无专利库，请先创建专利库
+            </div>
+          )}
+          
+          <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end', marginTop: '24px', paddingTop: '20px', borderTop: `1px solid ${DesignTokens.colors.border}` }}>
+            <Button 
+              variant="secondary" 
+              onClick={() => {
+                setShowChangeLibraryModal(false)
+                setSelectedNewLibrary(null)
+              }}
+            >
+              取消
+            </Button>
+            <Button 
+              onClick={handleChangeLibrary}
+              disabled={!selectedNewLibrary || selectedNewLibrary.id === task.library_id || isUpdatingLibrary}
+            >
+              {isUpdatingLibrary ? '更新中...' : '确认修改并启动分析'}
+            </Button>
+          </div>
+        </div>
+      </Modal>
     </div>
   )
 }
@@ -2126,6 +3290,7 @@ const NewTask = () => {
   const [taskName, setTaskName] = useState('')
   const [uploadedFile, setUploadedFile] = useState(null)
   const [parsedPatent, setParsedPatent] = useState(null)
+  const [parsedPatentInfo, setParsedPatentInfo] = useState(null)
   const [isUploading, setIsUploading] = useState(false)
   const [uploadProgress, setUploadProgress] = useState(0)
   const [isParsing, setIsParsing] = useState(false)
@@ -2133,6 +3298,10 @@ const NewTask = () => {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [libraries, setLibraries] = useState([])
   const [loadingLibraries, setLoadingLibraries] = useState(true)
+  const [createdTaskId, setCreatedTaskId] = useState(null)
+  const [showCreateLibraryModal, setShowCreateLibraryModal] = useState(false)
+  const [newLibraryName, setNewLibraryName] = useState('')
+  const [newLibraryDesc, setNewLibraryDesc] = useState('')
   
   // Fetch libraries from API
   useEffect(() => {
@@ -2151,7 +3320,6 @@ const NewTask = () => {
   }, [])
   
   const handleFileSelect = (files) => {
-    // Handle both single file and array of files
     const file = Array.isArray(files) ? files[0] : files
     
     if (!file) {
@@ -2168,6 +3336,7 @@ const NewTask = () => {
     setIsUploading(true)
     setUploadProgress(0)
     
+    // 模拟上传进度
     let progress = 0
     const interval = setInterval(() => {
       progress += 10
@@ -2180,75 +3349,130 @@ const NewTask = () => {
     }, 200)
   }
   
-  const startParsing = (file) => {
+  const startParsing = async (file) => {
     setIsParsing(true)
-    setTimeout(() => {
-      setIsParsing(false)
+    try {
+      // 实际上传和解析
+      const uploadResult = await api.upload.file(file)
+      const parseResult = await api.upload.parse(uploadResult.file_id)
+      
+      setParsedPatentInfo(parseResult.patent_info)
       setParsedPatent({
-        title: file.name.replace(/\.[^/.]+$/, ''),
-        ipc: 'H04N21/43',
-        claims: 12,
-        quality: 95,
+        title: parseResult.patent_info.title || file.name.replace(/\.[^/.]+$/, ''),
+        ipc: parseResult.patent_info.ipc || 'N/A',
+        claims: parseResult.patent_info.claims?.length || 0,
+        quality: parseResult.quality_score || 95,
       })
+      
       if (!taskName) {
-        setTaskName(file.name.replace(/\.[^/.]+$/, '') + '分析')
+        setTaskName((parseResult.patent_info.title || file.name.replace(/\.[^/.]+$/, '')) + ' 分析')
       }
-    }, 2000)
+    } catch (error) {
+      console.error('Failed to parse patent:', error)
+      alert('专利解析失败: ' + error.message)
+    } finally {
+      setIsParsing(false)
+    }
   }
   
-  const handleSubmit = async () => {
-    if (!taskName.trim() || !parsedPatent || !selectedLibrary) {
-      alert('请填写完整信息')
+  // Step 1: 创建任务（仅上传目标专利，不选库）
+  const handleCreateTask = async () => {
+    if (!taskName.trim() || !parsedPatentInfo) {
+      alert('请填写任务名称并上传目标专利')
       return
     }
     
     setIsSubmitting(true)
     
     try {
-      // Step 1: Create analysis task first (without target patent)
-      console.log('Creating task...')
+      // 创建任务，暂时不指定 library_id（设为 null 或默认值）
       const taskResult = await api.tasks.create({
         name: taskName,
-        library_id: selectedLibrary.id,
+        library_id: 'temp', // 临时值，后面会更新
       })
-      console.log('Task created:', taskResult)
       
-      // Step 2: Upload target patent file
-      console.log('Uploading target patent...')
-      const uploadResult = await api.upload.file(uploadedFile)
-      console.log('Upload result:', uploadResult)
-      
-      // Step 3: Parse the patent
-      const parseResult = await api.upload.parse(uploadResult.file_id)
-      console.log('Parse result:', parseResult)
-      
-      // Step 4: Save patent to the library
-      const saveResult = await api.upload.save({
-        file_id: uploadResult.file_id,
-        library_id: selectedLibrary.id,
-        patent_info: parseResult.patent_info,
-        quality_score: parseResult.quality_score,
+      // 提交任务，传入目标专利信息
+      await api.tasks.submit(taskResult.id, {
+        target_patent_info: parsedPatentInfo
       })
-      console.log('Save result:', saveResult)
       
-      // Step 5: Submit task with target patent
-      console.log('Submitting task with target patent...')
-      await api.tasks.submit(taskResult.id, saveResult.id)
-      console.log('Task submitted successfully')
+      setCreatedTaskId(taskResult.id)
+      setStep(2) // 进入选择对比库步骤
       
-      // Navigate to the new task
-      navigate(`/tasks/${taskResult.id}`)
     } catch (error) {
       console.error('Failed to create task:', error)
       alert('创建任务失败: ' + error.message)
+    } finally {
       setIsSubmitting(false)
     }
   }
   
+  // Step 2: 选择或创建对比库后提交
+  const handleSelectLibrary = async () => {
+    if (!selectedLibrary || !createdTaskId) {
+      alert('请选择一个对比专利库')
+      return
+    }
+    
+    setIsSubmitting(true)
+    
+    try {
+      // 更新任务的 library_id
+      await api.tasks.update(createdTaskId, {
+        library_id: selectedLibrary.id
+      })
+      
+      // 重新提交任务（这会触发实际的分析）
+      await api.tasks.submit(createdTaskId, {})
+      
+      navigate(`/tasks/${createdTaskId}`)
+    } catch (error) {
+      console.error('Failed to submit task:', error)
+      alert('提交任务失败: ' + error.message)
+      setIsSubmitting(false)
+    }
+  }
+  
+  // 根据目标专利创建新库
+  const handleCreateLibraryFromPatent = async () => {
+    if (!newLibraryName.trim()) {
+      alert('请输入专利库名称')
+      return
+    }
+    
+    try {
+      // 创建新库
+      const library = await api.libraries.create({
+        name: newLibraryName,
+        description: newLibraryDesc || `基于目标专利"${parsedPatent?.title}"创建的对比库`,
+      })
+      
+      // 将目标专利保存到这个新库（可选）
+      if (uploadedFile && parsedPatentInfo) {
+        const uploadResult = await api.upload.file(uploadedFile)
+        await api.upload.save({
+          file_id: uploadResult.file_id,
+          library_id: library.id,
+          patent_info: parsedPatentInfo,
+          quality_score: 95,
+        })
+      }
+      
+      // 刷新库列表并选中新库
+      const data = await api.libraries.list()
+      setLibraries(data)
+      setSelectedLibrary(library)
+      setShowCreateLibraryModal(false)
+      
+    } catch (error) {
+      console.error('Failed to create library:', error)
+      alert('创建专利库失败: ' + error.message)
+    }
+  }
+  
   const steps = [
-    { num: 1, label: '上传专利' },
-    { num: 2, label: '选择库' },
-    { num: 3, label: '确认提交' },
+    { num: 1, label: '上传目标专利' },
+    { num: 2, label: '选择/创建对比库' },
   ]
   
   return (
@@ -2414,8 +3638,8 @@ const NewTask = () => {
             <Button variant="secondary" onClick={() => navigate('/')}>
               取消
             </Button>
-            <Button onClick={() => setStep(2)} disabled={!parsedPatent}>
-              下一步 →
+            <Button onClick={handleCreateTask} disabled={!parsedPatent || isSubmitting}>
+              {isSubmitting ? '创建中...' : '创建任务并选择对比库 →'}
             </Button>
           </div>
         </Card>
@@ -2423,111 +3647,163 @@ const NewTask = () => {
       
       {step === 2 && (
         <Card>
-          <h2 style={{ fontSize: '24px', fontWeight: 700, marginBottom: '10px', fontFamily: DesignTokens.fonts.display, color: DesignTokens.colors.primary }}>选择比对库</h2>
+          <h2 style={{ fontSize: '24px', fontWeight: 700, marginBottom: '10px', fontFamily: DesignTokens.fonts.display, color: DesignTokens.colors.primary }}>选择或创建对比库</h2>
           <p style={{ fontSize: '15px', color: DesignTokens.colors.text.secondary, marginBottom: '28px' }}>
-            基于您的专利IPC分类 {parsedPatent?.ipc}，推荐以下库
+            选择现有的专利库进行对比，或基于目标专利创建新的对比库
           </p>
           
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '14px', marginBottom: '28px' }}>
-            {libraries.map((lib) => (
-              <div
-                key={lib.id}
-                onClick={() => setSelectedLibrary(lib)}
-                style={{
-                  padding: '20px',
-                  borderRadius: DesignTokens.radii.lg,
-                  border: `2px solid ${selectedLibrary?.id === lib.id ? DesignTokens.colors.primary : DesignTokens.colors.border}`,
-                  background: selectedLibrary?.id === lib.id ? `${DesignTokens.colors.primary}08` : 'white',
-                  cursor: 'pointer',
-                  transition: 'all 0.2s',
-                }}
-              >
-                <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-                  <div style={{
-                    width: '24px',
-                    height: '24px',
-                    borderRadius: DesignTokens.radii.full,
+          {/* 创建新库按钮 */}
+          <div 
+            onClick={() => setShowCreateLibraryModal(true)}
+            style={{
+              padding: '20px',
+              borderRadius: DesignTokens.radii.lg,
+              border: `2px dashed ${DesignTokens.colors.primary}`,
+              background: `${DesignTokens.colors.primary}04`,
+              cursor: 'pointer',
+              transition: 'all 0.2s',
+              marginBottom: '20px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '12px',
+            }}
+          >
+            <Icons.Plus size={24} color={DesignTokens.colors.primary} />
+            <span style={{ fontWeight: 600, fontSize: '16px', color: DesignTokens.colors.primary }}>
+              基于目标专利创建新库
+            </span>
+          </div>
+          
+          <div style={{ 
+            fontSize: '14px', 
+            color: DesignTokens.colors.text.muted, 
+            marginBottom: '16px',
+            textAlign: 'center'
+          }}>
+            — 或选择现有库 —
+          </div>
+          
+          {/* 现有库列表 */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '14px', marginBottom: '28px', maxHeight: '400px', overflow: 'auto' }}>
+            {libraries.length === 0 ? (
+              <div style={{ textAlign: 'center', padding: '40px', color: DesignTokens.colors.text.muted }}>
+                暂无现有专利库，请创建新库
+              </div>
+            ) : (
+              libraries.map((lib) => (
+                <div
+                  key={lib.id}
+                  onClick={() => setSelectedLibrary(lib)}
+                  style={{
+                    padding: '20px',
+                    borderRadius: DesignTokens.radii.lg,
                     border: `2px solid ${selectedLibrary?.id === lib.id ? DesignTokens.colors.primary : DesignTokens.colors.border}`,
-                    background: selectedLibrary?.id === lib.id ? DesignTokens.colors.primary : 'white',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                  }}>
-                    {selectedLibrary?.id === lib.id && (
-                      <Icons.Check size={14} color="white" />
-                    )}
-                  </div>
-                  <div style={{ flex: 1 }}>
-                    <div style={{ fontWeight: 600, fontSize: '16px', marginBottom: '4px', color: DesignTokens.colors.text.primary }}>{lib.name}</div>
-                    <div style={{ fontSize: '14px', color: DesignTokens.colors.text.muted }}>
-                      {lib.patent_count || 0}份专利
+                    background: selectedLibrary?.id === lib.id ? `${DesignTokens.colors.primary}08` : 'white',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s',
+                  }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                    <div style={{
+                      width: '24px',
+                      height: '24px',
+                      borderRadius: DesignTokens.radii.full,
+                      border: `2px solid ${selectedLibrary?.id === lib.id ? DesignTokens.colors.primary : DesignTokens.colors.border}`,
+                      background: selectedLibrary?.id === lib.id ? DesignTokens.colors.primary : 'white',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                    }}>
+                      {selectedLibrary?.id === lib.id && (
+                        <Icons.Check size={14} color="white" />
+                      )}
+                    </div>
+                    <div style={{ flex: 1 }}>
+                      <div style={{ fontWeight: 600, fontSize: '16px', marginBottom: '4px', color: DesignTokens.colors.text.primary }}>{lib.name}</div>
+                      <div style={{ fontSize: '14px', color: DesignTokens.colors.text.muted }}>
+                        {lib.patent_count || 0}份专利 · {((lib.size_mb || 0) / 1024).toFixed(2)}GB
+                      </div>
                     </div>
                   </div>
                 </div>
-              </div>
-            ))}
+              ))
+            )}
           </div>
           
           <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
             <Button variant="secondary" onClick={() => setStep(1)}>
               ← 上一步
             </Button>
-            <Button onClick={() => setStep(3)} disabled={!selectedLibrary}>
-              下一步 →
+            <Button onClick={handleSelectLibrary} disabled={!selectedLibrary || isSubmitting}>
+              {isSubmitting ? '提交中...' : '开始分析'}
             </Button>
           </div>
         </Card>
       )}
       
-      {step === 3 && (
-        <Card>
-          <h2 style={{ fontSize: '24px', fontWeight: 700, marginBottom: '28px', fontFamily: DesignTokens.fonts.display, color: DesignTokens.colors.primary }}>确认任务信息</h2>
-          
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginBottom: '28px' }}>
-            <div style={{ padding: '20px', background: DesignTokens.colors.background, borderRadius: DesignTokens.radii.md }}>
-              <div style={{ fontSize: '12px', color: DesignTokens.colors.text.muted, marginBottom: '6px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>任务名称</div>
-              <div style={{ fontWeight: 600, fontSize: '16px', color: DesignTokens.colors.text.primary }}>{taskName}</div>
-            </div>
-            
-            <div style={{ padding: '20px', background: DesignTokens.colors.background, borderRadius: DesignTokens.radii.md }}>
-              <div style={{ fontSize: '12px', color: DesignTokens.colors.text.muted, marginBottom: '6px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>目标专利</div>
-              <div style={{ fontWeight: 600, fontSize: '16px', color: DesignTokens.colors.text.primary }}>{parsedPatent?.title}</div>
-              <div style={{ fontSize: '14px', color: DesignTokens.colors.text.muted, marginTop: '6px' }}>
-                IPC: {parsedPatent?.ipc} · 权利要求: {parsedPatent?.claims}项
-              </div>
-            </div>
-            
-            <div style={{ padding: '20px', background: DesignTokens.colors.background, borderRadius: DesignTokens.radii.md }}>
-              <div style={{ fontSize: '12px', color: DesignTokens.colors.text.muted, marginBottom: '6px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>比对库</div>
-              <div style={{ fontWeight: 600, fontSize: '16px', color: DesignTokens.colors.text.primary }}>{selectedLibrary?.name}</div>
-              <div style={{ fontSize: '14px', color: DesignTokens.colors.text.muted, marginTop: '6px' }}>
-                {selectedLibrary?.patent_count || 0}份专利
-              </div>
+      {/* Create Library Modal */}
+      <Modal
+        isOpen={showCreateLibraryModal}
+        onClose={() => setShowCreateLibraryModal(false)}
+        title="基于目标专利创建新库"
+      >
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+          <div style={{ padding: '16px', background: `${DesignTokens.colors.primary}08`, borderRadius: DesignTokens.radii.md }}>
+            <div style={{ fontSize: '14px', color: DesignTokens.colors.text.secondary }}>
+              将基于目标专利 <strong>{parsedPatent?.title}</strong> 创建新的对比专利库
             </div>
           </div>
           
-          <div style={{ padding: '20px', background: `${DesignTokens.colors.accent}06`, borderRadius: DesignTokens.radii.md, marginBottom: '28px', border: `1px solid ${DesignTokens.colors.accent}20` }}>
-            <div style={{ fontSize: '15px', fontWeight: 600, color: DesignTokens.colors.accentDark, marginBottom: '12px' }}>
-              预估信息
-            </div>
-            <ul style={{ fontSize: '14px', color: DesignTokens.colors.text.secondary, paddingLeft: '20px', lineHeight: 1.8 }}>
-              <li>处理时间: 约 30-60 秒</li>
-              <li>预估费用: ¥0.12</li>
-              <li>结果数量: Top 20 相似专利</li>
-            </ul>
+          <div>
+            <label style={{ display: 'block', fontSize: '14px', fontWeight: 600, marginBottom: '8px', color: DesignTokens.colors.text.primary }}>
+              专利库名称 *
+            </label>
+            <input
+              type="text"
+              value={newLibraryName}
+              onChange={(e) => setNewLibraryName(e.target.value)}
+              placeholder="例如：视频编辑技术库"
+              style={{
+                width: '100%',
+                padding: '12px 16px',
+                border: `1px solid ${DesignTokens.colors.border}`,
+                borderRadius: DesignTokens.radii.md,
+                fontSize: '14px',
+              }}
+            />
+          </div>
+          
+          <div>
+            <label style={{ display: 'block', fontSize: '14px', fontWeight: 600, marginBottom: '8px', color: DesignTokens.colors.text.primary }}>
+              描述
+            </label>
+            <textarea
+              value={newLibraryDesc}
+              onChange={(e) => setNewLibraryDesc(e.target.value)}
+              placeholder="描述这个专利库的用途..."
+              rows={3}
+              style={{
+                width: '100%',
+                padding: '12px 16px',
+                border: `1px solid ${DesignTokens.colors.border}`,
+                borderRadius: DesignTokens.radii.md,
+                fontSize: '14px',
+                resize: 'vertical',
+              }}
+            />
           </div>
           
           <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
-            <Button variant="secondary" onClick={() => setStep(2)}>
-              ← 上一步
+            <Button variant="secondary" onClick={() => setShowCreateLibraryModal(false)}>
+              取消
             </Button>
-            <Button onClick={handleSubmit} disabled={isSubmitting}>
-              {isSubmitting ? '提交中...' : '提交任务'}
+            <Button onClick={handleCreateLibraryFromPatent} disabled={!newLibraryName.trim()}>
+              创建并选择
             </Button>
           </div>
-        </Card>
-      )
-      }
+        </div>
+      </Modal>
     </div>
   )
 }

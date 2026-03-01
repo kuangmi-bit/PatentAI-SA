@@ -47,6 +47,25 @@ class PatentInfo(BaseModel):
     abstract: Optional[str] = Field(None, description="Patent abstract")
     claims: Optional[List[str]] = Field(None, description="Patent claims")
     description: Optional[str] = Field(None, description="Patent description")
+    extraction_quality: Optional[int] = Field(None, description="Extraction quality score", ge=0, le=100)
+
+
+class ScoreDetail(BaseModel):
+    """Detailed score breakdown for a dimension"""
+    dimension: str = Field(description="Scoring dimension name")
+    score: float = Field(ge=0, le=100, description="Score for this dimension")
+    weight: float = Field(ge=0, le=1, description="Weight of this dimension")
+    weighted_score: float = Field(ge=0, le=100, description="Weighted contribution")
+    reason: str = Field(description="Reasoning for this score")
+
+
+class HighlightSegment(BaseModel):
+    """Highlighted text segment in patent content"""
+    text: str = Field(description="Highlighted text content")
+    start_pos: int = Field(description="Start position in original text")
+    end_pos: int = Field(description="End position in original text")
+    field_type: str = Field(description="Field type: claims, abstract, description")
+    similarity_to_target: float = Field(ge=0, le=100, description="Similarity to target patent segment")
 
 
 class SimilarityResult(BaseModel):
@@ -58,6 +77,14 @@ class SimilarityResult(BaseModel):
     similarity_score: float = Field(ge=0, le=100, description="Similarity score (0-100)")
     risk_level: RiskLevel = Field(description="Infringement risk level")
     matched_features: List[str] = Field(default=[], description="Matched technical features")
+    # Detailed analysis
+    score_details: Optional[List[ScoreDetail]] = Field(None, description="Detailed score breakdown")
+    highlights: Optional[List[HighlightSegment]] = Field(None, description="Highlighted similar segments")
+    analysis_summary: Optional[str] = Field(None, description="Overall analysis summary")
+    # Patent content for display
+    abstract: Optional[str] = Field(None, description="Patent abstract")
+    claims: Optional[List[str]] = Field(None, description="Patent claims")
+    ipc: Optional[str] = Field(None, description="IPC classification")
 
 
 class TaskStage(BaseModel):
@@ -88,6 +115,14 @@ class UpdateTaskRequest(BaseModel):
     """Update task request"""
     name: Optional[str] = Field(None, min_length=1, max_length=200)
     status: Optional[TaskStatus] = None
+    library_id: Optional[str] = Field(None, description="关联的专利库ID")
+
+
+class SubmitTaskRequest(BaseModel):
+    """Submit task with target patent info"""
+    target_patent_id: Optional[str] = Field(None, description="Existing patent ID (optional)")
+    target_patent_info: Optional[PatentInfo] = Field(None, description="Target patent info (if not in library)")
+    target_patent_file_id: Optional[str] = Field(None, description="Uploaded file ID for target patent")
 
 
 # ============== Response Models ==============
@@ -133,12 +168,19 @@ class LibraryCreate(BaseModel):
     description: Optional[str] = Field(None, description="Library description")
 
 
+class LibraryUpdate(BaseModel):
+    """Update library request"""
+    name: Optional[str] = Field(None, min_length=1, max_length=255, description="Library name")
+    description: Optional[str] = Field(None, description="Library description")
+
+
 class LibraryResponse(BaseModel):
     """Patent library response"""
     id: str = Field(description="Library ID")
     name: str = Field(description="Library name")
     description: Optional[str] = Field(None, description="Library description")
     patent_count: int = Field(default=0, description="Number of patents")
+    size_mb: float = Field(default=0.0, description="Storage size in MB")
     created_at: datetime = Field(description="Creation time")
     updated_at: datetime = Field(description="Last update time")
 
@@ -198,6 +240,20 @@ class BatchImportResponse(BaseModel):
     failed: int = Field(description="Failed to import")
     errors: List[str] = Field(default=[], description="Error messages")
     patent_ids: List[str] = Field(default=[], description="Imported patent IDs")
+
+
+# ============== Batch Import V2 ==============
+
+class BatchImportStatusResponse(BaseModel):
+    """批量导入状态响应"""
+    import_id: str = Field(description="导入任务ID")
+    status: str = Field(description="状态: running/completed/failed")
+    message: str = Field(description="状态消息")
+    total_files: int = Field(description="总文件数")
+    processed_files: int = Field(description="已处理文件数")
+    success_count: int = Field(description="成功数量")
+    failed_count: int = Field(description="失败数量")
+    errors: Optional[List[Dict[str, str]]] = Field(None, description="错误列表")
 
 
 # ============== Health Check ==============

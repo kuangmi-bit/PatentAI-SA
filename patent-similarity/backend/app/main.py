@@ -8,7 +8,7 @@ import os
 
 from app.core.config import settings
 from app.core.logging import configure_logging, get_logger
-from app.api import health, tasks, libraries, upload, patents, batch
+from app.api import health, tasks, libraries, upload, patents, batch, batch_import_v2
 from app.db.database import init_db, close_db, create_tables
 
 # Configure logging
@@ -41,6 +41,7 @@ app.include_router(libraries.router)
 app.include_router(upload.router)
 app.include_router(patents.router)
 app.include_router(batch.router)
+app.include_router(batch_import_v2.router)
 
 # Mount static files for reports
 if os.path.exists("reports"):

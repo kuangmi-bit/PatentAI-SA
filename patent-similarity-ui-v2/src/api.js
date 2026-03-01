@@ -28,6 +28,7 @@ export const api = {
     list: () => fetchApi('/libraries'),
     get: (id) => fetchApi(`/libraries/${id}`),
     create: (data) => fetchApi('/libraries', { method: 'POST', body: JSON.stringify(data) }),
+    update: (id, data) => fetchApi(`/libraries/${id}`, { method: 'PATCH', body: JSON.stringify(data) }),
     delete: (id) => fetchApi(`/libraries/${id}`, { method: 'DELETE' }),
   },
   
@@ -43,9 +44,24 @@ export const api = {
     list: () => fetchApi('/tasks'),
     get: (id) => fetchApi(`/tasks/${id}`),
     create: (data) => fetchApi('/tasks', { method: 'POST', body: JSON.stringify(data) }),
-    submit: (id, patentId) => fetchApi(`/tasks/${id}/submit${patentId ? `?target_patent_id=${patentId}` : ''}`, { method: 'POST' }),
+    submit: (id, data) => {
+      // Support both old format (patentId string) and new format (data object)
+      if (typeof data === 'string') {
+        // Old format: patent ID
+        return fetchApi(`/tasks/${id}/submit`, { 
+          method: 'POST', 
+          body: JSON.stringify({ target_patent_id: data }) 
+        });
+      }
+      // New format: { target_patent_id, target_patent_info, target_patent_file_id }
+      return fetchApi(`/tasks/${id}/submit`, { 
+        method: 'POST', 
+        body: JSON.stringify(data) 
+      });
+    },
     cancel: (id) => fetchApi(`/tasks/${id}/cancel`, { method: 'POST' }),
     delete: (id) => fetchApi(`/tasks/${id}`, { method: 'DELETE' }),
+    update: (id, data) => fetchApi(`/tasks/${id}`, { method: 'PATCH', body: JSON.stringify(data) }),
     result: (id) => fetchApi(`/tasks/${id}/result`),
   },
   
@@ -84,6 +100,38 @@ export const api = {
       method: 'POST',
       body: JSON.stringify({ patents, generate_embeddings: true }),
     }),
+  },
+  
+  // Batch Import V2 - 支持压缩文件和文件夹
+  batchImport: {
+    // 上传压缩文件
+    uploadArchive: async (libraryId, file) => {
+      const formData = new FormData();
+      formData.append('file', file);
+      
+      const response = await fetch(`${API_BASE}/batch/v2/import/archive/${libraryId}`, {
+        method: 'POST',
+        body: formData,
+      });
+      
+      if (!response.ok) {
+        const error = await response.json().catch(() => ({ detail: response.statusText }));
+        throw new Error(error.detail || `HTTP ${response.status}`);
+      }
+      return response.json();
+    },
+    
+    // 从文件夹导入
+    importDirectory: (libraryId, directoryPath) => fetchApi(
+      `/batch/v2/import/directory/${libraryId}?directory_path=${encodeURIComponent(directoryPath)}`,
+      { method: 'POST' }
+    ),
+    
+    // 获取导入状态
+    getStatus: (importId) => fetchApi(`/batch/v2/import/status/${importId}`),
+    
+    // 获取活动中的导入任务
+    listActive: () => fetchApi('/batch/v2/import/active'),
   },
 };
 

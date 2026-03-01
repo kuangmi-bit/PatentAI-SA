@@ -63,6 +63,7 @@ class PatentModel(Base):
     # File info
     file_path: Mapped[Optional[str]] = mapped_column(String(500), nullable=True)
     file_name: Mapped[Optional[str]] = mapped_column(String(200), nullable=True)
+    file_size: Mapped[int] = mapped_column(Integer, default=0)  # File size in bytes
     
     # Embedding (stored as JSON for flexibility)
     embedding: Mapped[Optional[list]] = mapped_column(JSON, nullable=True)
@@ -101,6 +102,65 @@ class PatentModel(Base):
         return result
 
 
+class TargetPatentModel(Base):
+    """Target patent for analysis task (not in any library)"""
+    __tablename__ = "target_patents"
+    
+    id: Mapped[str] = mapped_column(String(50), primary_key=True)
+    task_id: Mapped[str] = mapped_column(String(50), ForeignKey("tasks.id"), nullable=False, unique=True)
+    
+    # Patent metadata
+    title: Mapped[str] = mapped_column(String(500), nullable=False)
+    application_no: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
+    publication_no: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
+    ipc: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
+    applicant: Mapped[Optional[str]] = mapped_column(String(200), nullable=True)
+    inventors: Mapped[Optional[list]] = mapped_column(JSON, default=list)
+    
+    # Patent content
+    abstract: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    claims: Mapped[Optional[list]] = mapped_column(JSON, default=list)
+    description: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    
+    # File info
+    file_path: Mapped[Optional[str]] = mapped_column(String(500), nullable=True)
+    file_name: Mapped[Optional[str]] = mapped_column(String(200), nullable=True)
+    file_size: Mapped[int] = mapped_column(Integer, default=0)
+    
+    # Embedding (optional, for advanced usage)
+    embedding: Mapped[Optional[list]] = mapped_column(JSON, nullable=True)
+    embedding_dimensions: Mapped[int] = mapped_column(Integer, default=0)
+    
+    # Extraction quality
+    extraction_quality: Mapped[int] = mapped_column(Integer, default=0)
+    
+    # Timestamps
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    updated_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    def to_dict(self, include_embedding: bool = False) -> dict:
+        result = {
+            "id": self.id,
+            "task_id": self.task_id,
+            "title": self.title,
+            "application_no": self.application_no,
+            "publication_no": self.publication_no,
+            "ipc": self.ipc,
+            "applicant": self.applicant,
+            "inventors": self.inventors or [],
+            "abstract": self.abstract,
+            "claims": self.claims or [],
+            "description": self.description,
+            "file_name": self.file_name,
+            "extraction_quality": self.extraction_quality,
+            "created_at": self.created_at.isoformat() if self.created_at else None,
+            "updated_at": self.updated_at.isoformat() if self.updated_at else None
+        }
+        if include_embedding and self.embedding:
+            result["embedding"] = self.embedding
+        return result
+
+
 class TaskModel(Base):
     """Analysis task model"""
     __tablename__ = "tasks"
@@ -111,7 +171,7 @@ class TaskModel(Base):
     progress: Mapped[int] = mapped_column(Integer, default=0)
     
     # Task configuration
-    library_id: Mapped[str] = mapped_column(String(50), ForeignKey("libraries.id"), nullable=False)
+    library_id: Mapped[Optional[str]] = mapped_column(String(50), ForeignKey("libraries.id"), nullable=True)
     target_patent_id: Mapped[Optional[str]] = mapped_column(String(50), ForeignKey("patents.id"), nullable=True)
     
     # Owner
